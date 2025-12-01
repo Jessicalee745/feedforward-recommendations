@@ -1,33 +1,113 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { initialRecommendations, Category, Recommendation } from '@/app/lib/data';
 import { RecommendationCard } from '@/components/recommendation-card';
 import { AddRecommendationForm } from '@/components/add-recommendation-form';
 import { BookOpen, MonitorPlay, Headphones, UserPlus } from 'lucide-react';
+import { supabase } from '@/app/lib/supabase';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category>('read');
-  const [recommendations, setRecommendations] = useState<Recommendation[]>(initialRecommendations);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [editingItem, setEditingItem] = useState<Recommendation | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch recommendations from Supabase
+  useEffect(() => {
+    fetchRecommendations();
+  }, []);
+
+  const fetchRecommendations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('recommendations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching recommendations:', error);
+        // Fall back to initial data if database fetch fails
+        setRecommendations(initialRecommendations);
+      } else {
+        // Map database fields to our Recommendation type
+        const mappedData: Recommendation[] = (data || []).map(item => ({
+          id: item.id,
+          category: item.category as Category,
+          recommendedBy: item.recommended_by,
+          title: item.title,
+          link: item.link || '',
+          notes: item.notes || '',
+          followRegularly: item.follow_regularly || false,
+        }));
+        setRecommendations(mappedData);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setRecommendations(initialRecommendations);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredRecommendations = recommendations.filter(
     (item) => item.category === activeCategory
   );
 
-  const handleAddRecommendation = (newRec: Omit<Recommendation, 'id'>) => {
-    const recommendation: Recommendation = {
-      ...newRec,
-      id: Math.random().toString(36).substr(2, 9),
-    };
-    setRecommendations([recommendation, ...recommendations]);
+  const handleAddRecommendation = async (newRec: Omit<Recommendation, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('recommendations')
+        .insert([{
+          category: newRec.category,
+          recommended_by: newRec.recommendedBy,
+          title: newRec.title,
+          link: newRec.link,
+          notes: newRec.notes,
+          follow_regularly: newRec.followRegularly,
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding recommendation:', error);
+        alert('Failed to add recommendation. Please try again.');
+      } else {
+        // Refresh recommendations
+        await fetchRecommendations();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to add recommendation. Please try again.');
+    }
   };
 
-  const handleEditRecommendation = (id: string, updatedRec: Omit<Recommendation, 'id'>) => {
-    setRecommendations(recommendations.map(item =>
-      item.id === id ? { ...updatedRec, id } : item
-    ));
-    setEditingItem(null);
+  const handleEditRecommendation = async (id: string, updatedRec: Omit<Recommendation, 'id'>) => {
+    try {
+      const { error } = await supabase
+        .from('recommendations')
+        .update({
+          category: updatedRec.category,
+          recommended_by: updatedRec.recommendedBy,
+          title: updatedRec.title,
+          link: updatedRec.link,
+          notes: updatedRec.notes,
+          follow_regularly: updatedRec.followRegularly,
+        })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error updating recommendation:', error);
+        alert('Failed to update recommendation. Please try again.');
+      } else {
+        // Refresh recommendations
+        await fetchRecommendations();
+        setEditingItem(null);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to update recommendation. Please try again.');
+    }
   };
 
   const handleEditClick = (item: Recommendation) => {
@@ -37,6 +117,14 @@ export default function Home() {
   const handleCloseForm = () => {
     setEditingItem(null);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-zinc-500">Loading recommendations...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans pb-20">
