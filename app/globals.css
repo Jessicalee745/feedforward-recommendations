@@ -8,8 +8,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ibm-plex), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: Didot, "Didot LT STD", "Hoefler Text", Garamond, "Times New Roman", serif;
+
+  /* Brand Colors */
+  --color-brand-navy: #1B365D;
+  --color-brand-gold: #E4A853;
 }
 
 @media (prefers-color-scheme: dark) {
