@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { initialRecommendations, Category, Recommendation } from '@/app/lib/data';
+import { Category, Recommendation } from '@/app/lib/data';
 import { RecommendationCard } from '@/components/recommendation-card';
 import { AddRecommendationForm } from '@/components/add-recommendation-form';
 import { BookOpen, MonitorPlay, Headphones, UserPlus } from 'lucide-react';
-import { supabase } from '@/app/lib/supabase';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category>('read');
@@ -13,38 +12,25 @@ export default function Home() {
   const [editingItem, setEditingItem] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch recommendations from Supabase
+  // Fetch recommendations from Google Sheets
   useEffect(() => {
     fetchRecommendations();
   }, []);
 
   const fetchRecommendations = async () => {
     try {
-      const { data, error } = await supabase
-        .from('recommendations')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const response = await fetch('/api/recommendations');
+      const data = await response.json();
 
-      if (error) {
-        console.error('Error fetching recommendations:', error);
-        // Fall back to initial data if database fetch fails
-        setRecommendations(initialRecommendations);
+      if (data.error) {
+        console.error('Error fetching recommendations:', data.error);
+        setRecommendations([]);
       } else {
-        // Map database fields to our Recommendation type
-        const mappedData: Recommendation[] = (data || []).map(item => ({
-          id: item.id,
-          category: item.category as Category,
-          recommendedBy: item.recommended_by,
-          title: item.title,
-          link: item.link || '',
-          notes: item.notes || '',
-          followRegularly: item.follow_regularly || false,
-        }));
-        setRecommendations(mappedData);
+        setRecommendations(data.recommendations);
       }
     } catch (error) {
       console.error('Error:', error);
-      setRecommendations(initialRecommendations);
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -56,24 +42,18 @@ export default function Home() {
 
   const handleAddRecommendation = async (newRec: Omit<Recommendation, 'id'>) => {
     try {
-      const { data, error } = await supabase
-        .from('recommendations')
-        .insert([{
-          category: newRec.category,
-          recommended_by: newRec.recommendedBy,
-          title: newRec.title,
-          link: newRec.link,
-          notes: newRec.notes,
-          follow_regularly: newRec.followRegularly,
-        }])
-        .select()
-        .single();
+      const response = await fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newRec),
+      });
 
-      if (error) {
-        console.error('Error adding recommendation:', error);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Error adding recommendation:', data.error);
         alert('Failed to add recommendation. Please try again.');
       } else {
-        // Refresh recommendations
         await fetchRecommendations();
       }
     } catch (error) {
@@ -84,23 +64,18 @@ export default function Home() {
 
   const handleEditRecommendation = async (id: string, updatedRec: Omit<Recommendation, 'id'>) => {
     try {
-      const { error } = await supabase
-        .from('recommendations')
-        .update({
-          category: updatedRec.category,
-          recommended_by: updatedRec.recommendedBy,
-          title: updatedRec.title,
-          link: updatedRec.link,
-          notes: updatedRec.notes,
-          follow_regularly: updatedRec.followRegularly,
-        })
-        .eq('id', id);
+      const response = await fetch('/api/recommendations', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...updatedRec }),
+      });
 
-      if (error) {
-        console.error('Error updating recommendation:', error);
+      const data = await response.json();
+
+      if (data.error) {
+        console.error('Error updating recommendation:', data.error);
         alert('Failed to update recommendation. Please try again.');
       } else {
-        // Refresh recommendations
         await fetchRecommendations();
         setEditingItem(null);
       }
