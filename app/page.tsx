@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Category, Recommendation } from '@/app/lib/data';
 import { RecommendationCard } from '@/components/recommendation-card';
-import { AddRecommendationForm } from '@/components/add-recommendation-form';
+
 import { BookOpen, MonitorPlay, Headphones, UserPlus } from 'lucide-react';
 
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState<Category>('read');
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [editingItem, setEditingItem] = useState<Recommendation | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   // Fetch recommendations from Google Sheets
@@ -40,58 +40,9 @@ export default function Home() {
     (item) => item.category === activeCategory
   );
 
-  const handleAddRecommendation = async (newRec: Omit<Recommendation, 'id'>) => {
-    try {
-      const response = await fetch('/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRec),
-      });
 
-      const data = await response.json();
 
-      if (data.error) {
-        console.error('Error adding recommendation:', data.error);
-        alert('Failed to add recommendation. Please try again.');
-      } else {
-        await fetchRecommendations();
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to add recommendation. Please try again.');
-    }
-  };
 
-  const handleEditRecommendation = async (id: string, updatedRec: Omit<Recommendation, 'id'>) => {
-    try {
-      const response = await fetch('/api/recommendations', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, ...updatedRec }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        console.error('Error updating recommendation:', data.error);
-        alert('Failed to update recommendation. Please try again.');
-      } else {
-        await fetchRecommendations();
-        setEditingItem(null);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Failed to update recommendation. Please try again.');
-    }
-  };
-
-  const handleEditClick = (item: Recommendation) => {
-    setEditingItem(item);
-  };
-
-  const handleCloseForm = () => {
-    setEditingItem(null);
-  };
 
   if (loading) {
     return (
@@ -174,7 +125,7 @@ export default function Home() {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="grid gap-4">
           {filteredRecommendations.map((item) => (
-            <RecommendationCard key={item.id} item={item} onEdit={handleEditClick} />
+            <RecommendationCard key={item.id} item={item} />
           ))}
 
           {filteredRecommendations.length === 0 && (
@@ -184,14 +135,9 @@ export default function Home() {
           )}
         </div>
       </main>
-      <div className="hidden">v2.1-no-button</div>
 
-      <AddRecommendationForm
-        onAdd={handleAddRecommendation}
-        onEdit={handleEditRecommendation}
-        editingItem={editingItem}
-        onClose={handleCloseForm}
-      />
+
+
     </div>
   );
 }

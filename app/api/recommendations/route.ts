@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecommendations, addRecommendation, updateRecommendation } from '@/app/lib/sheets';
+import { getRecommendations } from '@/app/lib/sheets';
 import { Category } from '@/app/lib/data';
 
 export async function GET() {
@@ -25,49 +25,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-
-        const success = await addRecommendation({
-            category: body.category,
-            recommended_by: body.recommendedBy,
-            title: body.title,
-            link: body.link || '',
-            notes: body.notes || '',
-            follow_regularly: body.followRegularly ? 'true' : 'false',
-        });
-
-        if (success) {
-            return NextResponse.json({ success: true });
-        } else {
-            return NextResponse.json({ error: 'Failed to add recommendation' }, { status: 500 });
-        }
-    } catch (error) {
-        console.error('Error in POST /api/recommendations:', error);
-        return NextResponse.json({ error: 'Failed to add recommendation' }, { status: 500 });
-    }
+    return NextResponse.json({ error: 'Submissions are currently disabled.' }, { status: 403 });
 }
 
 export async function PUT(request: NextRequest) {
-    try {
-        const body = await request.json();
-
-        const success = await updateRecommendation(body.id, {
-            category: body.category,
-            recommended_by: body.recommendedBy,
-            title: body.title,
-            link: body.link || '',
-            notes: body.notes || '',
-            follow_regularly: body.followRegularly ? 'true' : 'false',
-        });
-
-        if (success) {
-            return NextResponse.json({ success: true });
-        } else {
-            return NextResponse.json({ error: 'Failed to update recommendation' }, { status: 500 });
-        }
-    } catch (error) {
-        console.error('Error in PUT /api/recommendations:', error);
-        return NextResponse.json({ error: 'Failed to update recommendation' }, { status: 500 });
-    }
+    return NextResponse.json({ error: 'Updates are currently disabled.' }, { status: 403 });
 }

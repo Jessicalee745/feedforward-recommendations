@@ -1,22 +1,15 @@
 import { Recommendation } from '@/app/lib/data';
-import { ExternalLink, CheckCircle2, User, Pencil } from 'lucide-react';
+import { ExternalLink, CheckCircle2, User } from 'lucide-react';
 
 interface RecommendationCardProps {
     item: Recommendation;
-    onEdit: (item: Recommendation) => void;
 }
 
-export function RecommendationCard({ item, onEdit }: RecommendationCardProps) {
+export function RecommendationCard({ item }: RecommendationCardProps) {
     return (
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm hover:shadow-md transition-all duration-200 relative group">
             {/* Edit Button */}
-            <button
-                onClick={() => onEdit(item)}
-                className="absolute top-4 right-4 p-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-zinc-200 dark:hover:bg-zinc-700"
-                title="Edit recommendation"
-            >
-                <Pencil className="w-4 h-4" />
-            </button>
+
 
             <div className="flex justify-between items-start gap-4">
                 <div className="space-y-2 flex-1">
