@@ -63,14 +63,7 @@ export function AddRecommendationForm({ onAdd, onEdit, editingItem, onClose }: A
     };
 
     if (!isOpen) {
-        return (
-            <button
-                onClick={() => setIsOpen(true)}
-                className="fixed bottom-8 right-8 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-full p-4 shadow-lg hover:scale-105 transition-transform"
-            >
-                <Plus className="w-6 h-6" />
-            </button>
-        );
+        return null;
     }
 
     return (
