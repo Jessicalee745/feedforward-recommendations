@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Category, Recommendation } from '@/app/lib/data';
 
 interface AddRecommendationFormProps {

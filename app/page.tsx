@@ -184,6 +184,7 @@ export default function Home() {
           )}
         </div>
       </main>
+      <div className="hidden">v2.1-no-button</div>
 
       <AddRecommendationForm
         onAdd={handleAddRecommendation}
